@@ -7,12 +7,12 @@ import CardGroup from "react-bootstrap/CardGroup";
 function ViewCommentsComp(props) {
   const [show, setShow] = useState(props.commentsView);
   const [statusResponse, setStatusResponse] = useState([]);
-
+  //TODO: funcion para retornar el estado en falso de modal al padre
   const handleView = () => {
     props.handleView(0, false);
     setShow(false);
   };
-
+  //TODO: hook para manejar el Request si la propiedad id cambia
   useEffect(() => {
     fetch(process.env.REACT_APP_API_URL + `/${props.id}/comments`, {
       method: "GET",
@@ -22,9 +22,7 @@ function ViewCommentsComp(props) {
         setStatusResponse(json);
       });
   }, [props.id]);
-
-  useEffect(() => {});
-
+  //TODO: constante que genera la card para cada comentario/comments segun el ID
   const listCards = statusResponse.map((item) => {
     return (
       <div className="col-xl-12 col-lg-12 col-md-12 p-1" key={item.id}>
@@ -38,7 +36,7 @@ function ViewCommentsComp(props) {
               <b>Post ID:</b>
               {item.postId}
               <br />
-              <p>{item.body}</p>
+              {item.body}
             </Card.Text>
           </Card.Body>
           <Card.Footer>

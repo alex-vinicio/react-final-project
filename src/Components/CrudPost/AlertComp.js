@@ -3,6 +3,7 @@ import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/Button";
 
 function AlertComp(props) {
+  //TODO: estado para mostrar el tipo de alert, segun las propiedades del componente
   const [show, setShow] = useState(props.alertView);
   const [typeList] = useState([
     "primary",

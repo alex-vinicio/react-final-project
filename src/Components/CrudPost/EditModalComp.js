@@ -1,25 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import AlertComp from "./AlertComp";
 import Form from "react-bootstrap/Form";
+import OperationContext from "../Context/OperationProvider";
 
 function EditModalComp(props) {
+  //TODO: contexto que permite gestionar el Verbo para crear y actualizar, reutilizando el modal editar, conjuntamente con la alerta
+  const { titulo, verb, showInputId, subMessage } =
+    useContext(OperationContext);
   const [show, setShow] = useState(props.formView);
   const [itemResponse, setItemResponse] = useState(null);
   const [buttonDisabled, setButtonDisabled] = useState(false);
-
+  //TODO: estados para control de validacion del form, y de los campos
   const [validated, setValidated] = useState(false);
   const [idPost, setIdPost] = useState(props.item.id);
   const [titlePost, setTitlePost] = useState(props.item.title);
   const [idUsuarioPost, setIdUsuarioPost] = useState(props.item.userId);
   const [detallepost, setDetallepost] = useState(props.item.body);
-
+  //TODO: estados para enviar como propeidad al modal de alerta, generando el contenido dinamico
   const [message, setMessage] = useState("");
   const [head, setHead] = useState("");
   const [alertView, setAlertView] = useState(false);
   const [typeAlert, setTypeAlert] = useState("");
-
+  //TODO: estados para control de los botones de accion y del componente alerta
   const handleSend = async () => {
     setButtonDisabled(true);
     await sendRequest();
@@ -32,6 +36,7 @@ function EditModalComp(props) {
     setAlertView(value);
     handleDelete();
   };
+  //TODO: funcion que valida si los campos del formulario estan llenos
   const handleSubmit = async (event) => {
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
@@ -43,7 +48,7 @@ function EditModalComp(props) {
     }
     setValidated(true);
   };
-
+  //TODO: funciones que manejan formularios controlados con los estados
   const handlesetTitlePost = (event) => {
     setTitlePost(event.target.value);
   };
@@ -56,56 +61,70 @@ function EditModalComp(props) {
   const handleDetallePost = (event) => {
     setDetallepost(event.target.value);
   };
-
+  //TODO: hook que añade valores a los estados para mostrar en el modal de alerta
   useEffect(() => {
     if (itemResponse !== null) {
       if (typeof itemResponse === "object") {
         setTypeAlert("success");
         setHead("Exito!");
         setMessage(
-          `El item con:\n ID:${idPost}\n y Nombre:${titlePost} \n. Se actualizo correctamente`
+          `El item con:\n ID:${idPost}\n y Nombre:${titlePost} \n. Se ${subMessage} correctamente`
         );
         setAlertView(true);
       } else {
         setTypeAlert("danger");
         setMessage(
-          `Error al actualizar el registro con ID: ${itemResponse.id}`
+          `Error al actualizar/registrar el registro con ID: ${itemResponse.id}`
         );
         setHead("Error");
         setAlertView(true);
       }
     }
-  }, [itemResponse, idPost, titlePost]);
-
+  }, [itemResponse]);
+  //TODO: funcion que envia la peticion al servidor, segun el valor del Context almacenado
   const sendRequest = async () => {
-    fetch(process.env.REACT_APP_API_URL + "/" + props.item.id, {
-      method: "PUT",
-      body: JSON.stringify({
-        id: props.item.id,
-        title: props.item.title,
-        body: props.item.body,
-        userId: props.item.userId,
-      }),
-      headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
-    })
-      .then((response) => response.json())
-      .then((json) => {
-        setItemResponse(json);
+    if (verb !== "POST") {
+      fetch(process.env.REACT_APP_API_URL + "/" + props.item.id, {
+        method: "PUT",
+        body: JSON.stringify({
+          id: props.item.id,
+          title: titlePost,
+          body: detallepost,
+          userId: idUsuarioPost,
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
       })
-      .catch((error) => {
-        console.log(error);
-      });
+        .then((response) => response.json())
+        .then((json) => {
+          setItemResponse(json);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      fetch(process.env.REACT_APP_API_URL, {
+        method: verb,
+        body: JSON.stringify({
+          title: titlePost,
+          body: detallepost,
+          userId: idUsuarioPost,
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      })
+        .then((response) => response.json())
+        .then((json) => setItemResponse(json));
+    }
   };
 
   return (
     <>
       <Modal show={show} onHide={handleDelete} animation={false}>
         <Modal.Header closeButton>
-          <Modal.Title>
-            Va a actualizar el Post con ID: {props.item.id}
-          </Modal.Title>
+          <Modal.Title>Va a {titulo}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -120,6 +139,7 @@ function EditModalComp(props) {
                     name="idPost"
                     value={idPost}
                     onChange={(e) => handleSetName(e)}
+                    disabled={showInputId}
                   />
                   <Form.Control.Feedback>Campo correcto!</Form.Control.Feedback>
                   <Form.Control.Feedback type="invalid">
@@ -176,10 +196,8 @@ function EditModalComp(props) {
                   </Form.Control.Feedback>
                 </Form.Group>
               </div>
-
               <div className="col-md-4"></div>
               <div className="col-md-4"></div>
-
               <div className="row">
                 <div className="col-md-4"></div>
                 <div className="col-md-4 p-1 ">
